@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function readFileAsArray(path) {
+export function readFileAsArray(path) {
   return new Promise((resolve, reject) => {
     try {
       const output = [];
@@ -16,8 +16,4 @@ function readFileAsArray(path) {
       return reject(error);
     }
   });
-}
-
-module.exports = {
-  readFileAsArray,
 }
