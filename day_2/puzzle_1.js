@@ -18,13 +18,6 @@ function* parse(data) {
   };
 }
 
-function formatData(data) {
-  return data.map(line => {
-    const [op, value] = line.split(' ');
-    return { op, value: +value };
-  });
-}
-
 function puzzle1fn(data) {
   let forword = 0;
   let depth = 0;
@@ -71,7 +64,6 @@ function puzzle2fn(data) {
 
 async function main() {
   const data = await readFileAsArray(path.resolve(__dirname, '../day_2/data.txt'));
-  const formattedData = formatData(data);
   const puzzle1 = puzzle1fn(data);
   const puzzle2 = puzzle2fn(data);
 
