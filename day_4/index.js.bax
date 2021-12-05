@@ -1,0 +1,143 @@
+const fs = require('fs');
+const path = require('path');
+
+function getData(path) {
+    return new Promise((resolve, reject) => {
+        const output = {
+            drawnNumbers: [],
+            boardMap: {},
+            boards: [],
+        };
+
+        const data = fs.readFileSync(path, 'UTF-8');
+        const lines = data.split(/\r?\n/);
+
+        // sort out number draw
+        const [drawnNumbers] = lines.slice(0, 1);
+        output.drawnNumbers = drawnNumbers.split(',');
+        output.drawnNumbers.forEach(number => output.boardMap[number] = []);
+
+        // get the base boards
+        for (let i = 2; i < lines.length; i += 6) {
+            const rawBoard = lines.slice(i, i + 5);
+            const board = rawBoard.map(line => line.trim().split(/  */));
+            output.boards.push(board);
+        }
+
+        // build board map
+        output.boards.forEach((board, boardPos) => {
+            board.forEach((line, x) => {
+                line.forEach((number, y) => {
+                    const boardIdent = {
+                        boardIdx: boardPos,
+                        coords: { x, y },
+                        marked: false,
+                    };
+                    output.boardMap[number].push(boardIdent);
+                });
+            });
+        });
+
+        return resolve(output);
+    });
+}
+
+function checkIfHasWon(number, data) {
+    let hasWon = false;
+    let winningBoard = null;
+    const map = data.boardMap[number];
+
+    map.forEach(item => {
+        const board = data.boards[item.boardIdx];
+        // check the rows first
+        board.forEach(row => {
+            if (!hasWon) {
+                hasWon = row.every(number => data?.boardMap?.[number]?.[item.boardIdx]?.marked);
+            }
+        });
+
+        if (hasWon) {
+            winningBoard = item.boardIdx;
+        }
+
+        if (!hasWon) {
+            // if non of the rows have won check the colums
+            for(let col = 0; col < board[0].length; col += 1) {
+                const column = [
+                    board[0][col],
+                    board[1][col],
+                    board[2][col],
+                    board[3][col],
+                    board[4][col],
+                ];
+
+                hasWon = column.every(number => data?.boardMap?.[number]?.[item.boardIdx]?.marked);
+     
+                if (hasWon) {
+                    break;
+                }
+            }
+        }
+
+        if (hasWon) {
+            winningBoard = item.boardIdx;
+        }
+    });
+
+    return winningBoard;
+}
+
+function getTotalSum(winningBoard, data) {
+    const board = data.boards[winningBoard];
+    let sum = 0;
+    board.forEach(row => {
+        row.forEach(number => {
+            const boards = data?.boardMap?.[number];
+            boards.forEach(item => {
+                const isMarked = item.marked;
+                if (!isMarked && item.boardIdx === winningBoard) {
+                    sum += +number;
+                }
+            });
+        });
+    });
+
+    return sum;
+}
+
+function puzzle1fn(data) {
+    let hasWon = false;
+    for(let idx = 0; idx < data.drawnNumbers.length; idx += 1) {
+        const number = data.drawnNumbers[idx];
+        const boards = [ ...data.boardMap[number] ];
+        // mark the number
+        const updatedBoards = boards.map(board => ({ ...board, marked: true }));
+        data.boardMap[number] = updatedBoards;
+
+        // check if we have a wining board
+        const winningBoardIdx = checkIfHasWon(number, data);
+
+        if (winningBoardIdx) {
+            hasWon = {
+                boardIdx: winningBoardIdx,
+                lastNumber: +number,
+            };
+            break;
+        }
+    };
+    const totalSum = getTotalSum(hasWon.boardIdx, data);
+    return totalSum * hasWon.lastNumber;
+}
+
+async function main() {
+    try {
+        const data = await getData(path.resolve(__dirname, '../day_4/data.txt'));
+        console.log(data)
+        const puzzle1 = puzzle1fn(data);
+        console.log(`puzzle1: ${puzzle1}`);
+    } catch(error) {
+        console.log(error);
+    }
+}
+
+main();
