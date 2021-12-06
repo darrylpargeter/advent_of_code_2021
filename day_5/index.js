@@ -36,21 +36,42 @@ function getRange([start, end]) {
 }
 
 async function main() {
-    const data = await getData('../day_5/test_data.txt');
+    const data = await getData('../day_5/data.txt');
     const filterData = filterCoords(data);
-    console.log(filterData);
+    let output = {};
 
-    filterData.forEach(([x1, y1, x2, y2]) => {
-        const x = [+x1, +x2].sort();
-        const y = [+y1, +y2].sort();
-        const xRange = getRange(x);
-        const yRange = getRange(y);
+    try {
+        filterData.forEach(([x1, y1, x2, y2], idx) => {
+            console.log(`process: ${idx}/${filterData.length}`);
+            const x = [+x1, +x2].sort();
+            const y = [+y1, +y2].sort();
+            const xRange = getRange(x);
+            const yRange = getRange(y);
+                
+            const arrayToLoop = xRange.length > 1 ? xRange : yRange
+            const [staticValue] = xRange.length > 1 ? yRange : xRange
 
-        console.log({
-            xRange,
-            yRange
+            output = arrayToLoop.reduce((prev, curr) => {
+                const coord = xRange.length > 1 ? `${curr}:${staticValue}` : `${staticValue}:${curr}`;
+                if (!prev?.[coord]) {
+                    return {
+                        ...prev,
+                        [coord]: 1
+                    }
+                }
+
+                return {
+                    ...prev,
+                    [coord]: prev[coord] + 1,
+                }
+            }, output);
         });
-    });
+
+        const sum = Object.values(output).reduce((prev, curr) => curr > 1 ? prev + 1 : prev, 0);
+        console.log('sum', sum);
+    } catch(error) {
+        console.log(error);
+    }
 }
 
 main();
