@@ -6,7 +6,7 @@ function readFileAsArray(path) {
       const output = [];
       const data = fs.readFileSync(path, 'UTF-8');
 
-      const lines = data.split(/\r?\n/);
+      const lines = data.trim().split(/\r?\n/);
 
       lines.forEach(line => output.push(line));
       
